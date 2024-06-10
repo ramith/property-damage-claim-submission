@@ -2,7 +2,7 @@
 org = "ramith"
 name = "claim_processing_api"
 version = "0.1.0"
-distribution = "2201.8.5"
+distribution = "2201.9.0"
 
 [build-options]
 observabilityIncluded = true
