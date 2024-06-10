@@ -1,0 +1,116 @@
+openapi: 3.0.0
+info:
+  title: Claim Estimate API
+  version: 1.0.0
+  description: API for handling claims and generating estimates.
+servers:
+  - url: http://localhost:8082
+    description: Local server
+
+paths:
+  /estimate:
+    post:
+      summary: Generate an estimate based on the provided claim data
+      requestBody:
+        description: JSON payload containing claim details.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                claimReference:
+                  type: string
+                  example: "CLAIM12345"
+                customerReference:
+                  type: string
+                  example: "CUST98765"
+                customerProfile:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "CUSTPROF001"
+                policyID:
+                  type: integer
+                  example: 1234
+                lossDetails:
+                  type: object
+                  properties:
+                    dateOfLoss:
+                      type: string
+                      format: date
+                      example: "2024-06-01"
+                    typeOfLoss:
+                      type: string
+                      example: "Fire"
+                    estimatedLoss:
+                      type: string
+                      example: "$15000"
+                    attachments:
+                      type: string
+                      example: "attachment-url"
+      responses:
+        "200":
+          description: Successful response with estimate details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "Estimate Generated"
+                  estimatedRepairCost:
+                    type: string
+                    example: "$4500"
+                  vendorAssigned:
+                    type: string
+                    example: "DigiFact"
+                  expectedCompletionDate:
+                    type: string
+                    format: date-time
+                    example: "2024-06-20T00:00:00Z"
+        "400":
+          description: Bad request due to invalid payload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid payload."
+
+components:
+  schemas:
+    Claim:
+      type: object
+      properties:
+        claimReference:
+          type: string
+        customerReference:
+          type: string
+        customerProfile:
+          $ref: "#/components/schemas/CustomerProfile"
+        policyID:
+          type: integer
+        lossDetails:
+          $ref: "#/components/schemas/LossDetails"
+    CustomerProfile:
+      type: object
+      properties:
+        id:
+          type: string
+    LossDetails:
+      type: object
+      properties:
+        dateOfLoss:
+          type: string
+          format: date
+        typeOfLoss:
+          type: string
+        estimatedLoss:
+          type: string
+        attachments:
+          type: string

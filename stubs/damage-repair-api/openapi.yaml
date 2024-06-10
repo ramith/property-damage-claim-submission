@@ -1,0 +1,133 @@
+openapi: 3.0.0
+info:
+  title: Repair Service API
+  version: 1.0.0
+  description: API for scheduling repair services based on provided request payload.
+servers:
+  - url: http://localhost:8083
+    description: Local server
+
+paths:
+  /repair:
+    post:
+      summary: Schedule a repair service
+      requestBody:
+        description: JSON payload containing repair request details.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                claimReference:
+                  type: string
+                  example: "CLAIM12345"
+                customerReference:
+                  type: string
+                  example: "CUST98765"
+                propertyDetails:
+                  type: object
+                  properties:
+                    reference:
+                      type: string
+                      example: "PROP12345"
+                    address:
+                      type: string
+                      example: "123 Main St, Anytown, USA"
+                    type:
+                      type: string
+                      example: "Residential"
+                    location:
+                      type: object
+                      properties:
+                        latitude:
+                          type: number
+                          format: float
+                          example: 37.7749
+                        longitude:
+                          type: number
+                          format: float
+                          example: -122.4194
+                typeOfServiceRequested:
+                  type: string
+                  example: "Plumbing"
+                dateOfServiceRequested:
+                  type: string
+                  format: date
+                  example: "2024-06-15"
+      responses:
+        '200':
+          description: Successful response with service details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "Service Scheduled"
+                  serviceDate:
+                    type: string
+                    format: date
+                    example: "2024-06-15"
+                  serviceProvider:
+                    type: string
+                    example: "FirstOnSite"
+        '400':
+          description: Bad request due to invalid payload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid payload."
+
+components:
+  schemas:
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+    PropertyDetails:
+      type: object
+      properties:
+        reference:
+          type: string
+        address:
+          type: string
+        type:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+    RepairRequest:
+      type: object
+      properties:
+        claimReference:
+          type: string
+        customerReference:
+          type: string
+        propertyDetails:
+          $ref: '#/components/schemas/PropertyDetails'
+        typeOfServiceRequested:
+          type: string
+        dateOfServiceRequested:
+          type: string
+          format: date
+    RepairResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        serviceDate:
+          type: string
+          format: date
+        serviceProvider:
+          type: string
+

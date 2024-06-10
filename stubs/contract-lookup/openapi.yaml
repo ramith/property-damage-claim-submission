@@ -1,0 +1,78 @@
+openapi: 3.0.0
+info:
+  title: Contract Lookup API
+  version: 1.0.0
+  description: API for looking up contract information based on provided payload.
+servers:
+  - url: http://localhost:8081
+    description: Local server
+
+paths:
+  /lookup:
+    post:
+      summary: Lookup contract information
+      requestBody:
+        description: JSON payload containing claim and customer references along with policy ID.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                claimReference:
+                  type: string
+                  example: "CLAIM12345"
+                customerReference:
+                  type: string
+                  example: "CUST98765"
+                policyID:
+                  type: integer
+                  example: 1234
+      responses:
+        "200":
+          description: Successful response with routing information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "Success"
+                  message:
+                    type: string
+                    example: "Routing information retrieved."
+                  routeTo:
+                    type: string
+                    example: "DigiFact"
+        "400":
+          description: Bad request due to invalid payload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid payload."
+
+components:
+  schemas:
+    RequestPayload:
+      type: object
+      properties:
+        claimReference:
+          type: string
+        customerReference:
+          type: string
+        policyID:
+          type: integer
+    ResponsePayload:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        routeTo:
+          type: string
