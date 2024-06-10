@@ -1,41 +1,51 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-    r := gin.Default()
-
-    r.POST("/lookup", func(c *gin.Context) {
-
-        var payload map[string]interface{}
-
-        // Bind the JSON payload to the map.
-        if err := c.ShouldBindJSON(&payload); err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-            return
-        }
-
-        // Convert the payload map to JSON for logging
-        payloadJSON, err := json.MarshalIndent(payload, "", "  ")
-        if err != nil {
-            log.Println("Error converting payload to JSON:", err)
-        } else {
-            log.Println("Received JSON payload:", string(payloadJSON))
-        }
-
-        c.JSON(http.StatusOK, gin.H{
-            "status":   "Success",
-            "message":  "Routing information retrieved.",
-            "routeTo":  "DigiFact",
-        })
-    })
-
-    r.Run(":8081")
+// RequestPayload represents the structure of the incoming JSON payload.
+type RequestPayload struct {
+	ClaimReference    string `json:"claimReference"`
+	CustomerReference string `json:"customerReference"`
+	PolicyID          int    `json:"policyID"`
 }
 
+// ResponsePayload represents the structure of the outgoing JSON response.
+type ResponsePayload struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	RouteTo string `json:"routeTo"`
+}
+
+func main() {
+	r := gin.Default()
+
+	r.POST("/lookup", func(c *gin.Context) {
+		var requestPayload RequestPayload
+		// Bind the JSON payload to the struct.
+		if err := c.ShouldBindJSON(&requestPayload); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		// Log the received payload
+		log.Printf("Received payload: %+v", requestPayload)
+
+		// Create the response struct.
+		responsePayload := ResponsePayload{
+			Status:  "Success",
+			Message: "Routing information retrieved.",
+			RouteTo: "DigiFact",
+		}
+
+		// Send the response as JSON.
+		c.JSON(http.StatusOK, responsePayload)
+
+	})
+
+	r.Run(":8081")
+}
