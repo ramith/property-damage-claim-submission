@@ -79,13 +79,8 @@ function routeToDigiFact(ClaimSubmission claim) returns error? {
 function requestFireDamageRepair(ClaimSubmission claim) returns error? {
     // Send to fire department
     // Fire department API integration logic
-    FireDamageRepairRequest fireDamageRepairRequest = {
-        claimReference: claim.claimReference,
-        customerReference: claim.customerReference,
-        propertyDetails: claim.propertyDetails,
-        typeOfServiceRequested: claim.lossDetails.typeOfLoss,
-        dateOfServiceRequested: claim.lossDetails.dateOfLoss
-    };
+
+    FireDamageRepairRequest fireDamageRepairRequest = toFireDamageRepairRequest(claim);
 
     FireDamageRepairResponse fireDamageRepairResponse = check fireDamageRepairAPI->/repair.post(fireDamageRepairRequest);
     log:printInfo("fire damage repair response", fireDamageRepairResponse = fireDamageRepairResponse);
@@ -177,4 +172,22 @@ type FireDamageRepairResponse record {
     string status;
     string serviceDate;
     string serviceProvider;
+};
+
+//Data mapper
+function toFireDamageRepairRequest(ClaimSubmission claimSubmission) returns FireDamageRepairRequest => {
+    claimReference: claimSubmission.claimReference,
+    customerReference: claimSubmission.customerReference,
+    propertyDetails: claimSubmission.propertyDetails,
+    typeOfServiceRequested: claimSubmission.lossDetails.typeOfLoss,
+    dateOfServiceRequested: claimSubmission.lossDetails.dateOfLoss
+};
+
+
+function toDigiFactEstimationRequest(ClaimSubmission claimSubmission) returns DigiFactEstimationRequest|error => {
+    policyID: check int:fromString(claimSubmission.policyID),
+    claimReference: claimSubmission.claimReference,
+    customerReference: claimSubmission.customerReference,
+    customerProfile: claimSubmission.customerProfile,
+    lossDetails: claimSubmission.lossDetails
 };
