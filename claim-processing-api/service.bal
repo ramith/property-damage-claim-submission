@@ -14,7 +14,7 @@ http:Client fireDamageRepairAPI = check new (url = firedamageRepairApiEndpoint);
 # bound to port `9090`.
 service / on new http:Listener(9090) {
 
-    resource function post submitWithAttachments(http:Request req) returns string|error {
+    resource function post submit(http:Request req) returns string|error {
         mime:Entity[] bodyParts = check req.getBodyParts();
 
         ClaimSubmission claimSubmission = {claimType: "", claimReference: "", policyID: "", customerContact: {email: "", phone: ""}, lossDetails: {dateOfLoss: "", typeOfLoss: "", estimatedLoss: "", attachments: ""}, customerProfile: {id: "", name: "", address: ""}, propertyDetails: {reference: "", address: "", 'type: "", location: {latitude: 0, longitude: 0}}, customerReference: "", dateSubmitted: ""};
@@ -48,6 +48,8 @@ service / on new http:Listener(9090) {
         if (estimationResponse.status != "Estimate Generated") {
             return error("estimation workflow failed");
         }
+
+        check routeToDamageRepair(claimSubmission);
 
         return "claim submitted successfully";
     }
@@ -108,6 +110,7 @@ function routeToDigiFact(ClaimSubmission claim, FileAttachment attachment) retur
 
     mime:ContentDisposition jsonContentDisposition = new;
     jsonContentDisposition.name = "claim";
+    jsonContentDisposition.disposition = "form-data";
     jsonPart.setContentDisposition(jsonContentDisposition);
 
     mime:Entity filePart = new;
@@ -115,7 +118,8 @@ function routeToDigiFact(ClaimSubmission claim, FileAttachment attachment) retur
     check filePart.setContentType(attachment.contentType);
 
     mime:ContentDisposition fileContentDisposition = new;
-    fileContentDisposition.name = "attachment";
+    fileContentDisposition.name = "attachments";
+    fileContentDisposition.disposition = "form-data";
     fileContentDisposition.fileName = attachment.fileName;
     filePart.setContentDisposition(fileContentDisposition);
 
