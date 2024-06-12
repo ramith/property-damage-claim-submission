@@ -13,6 +13,17 @@ http:Client fireDamageRepairAPI = check new (url = firedamageRepairApiEndpoint);
 # bound to port `9090`.
 service / on new http:Listener(9090) {
 
+    # Receives a claim submission and routes it to the appropriate system.
+    #
+    # This function handles the submission of a claim, validates the incoming data,
+    # and routes it to the designated system based on the provided information.
+    #
+    # + claim - The claim submission details including claim reference, customer reference,
+    #           customer profile, policy ID, and loss details.
+    # + request - The HTTP request received, containing the claim submission payload.
+    # 
+    # + returns - An error message if validation fails or routing encounters an issue.
+    #             A success message if the claim is successfully routed.
     resource function post submit(ClaimSubmission claim, http:Request request) returns error|string {
         // Add your logic here
 
@@ -46,6 +57,12 @@ service / on new http:Listener(9090) {
     }
 }
 
+# Routes the claim submission to the DigiFact system.
+#
+# + claim - The claim submission details including claim reference, customer reference,
+#           customer profile, policy ID, and loss details.
+#
+# + returns - An error if there is an issue during the routing process. Otherwise, returns nothing.
 function routeToDigiFact(ClaimSubmission claim) returns error? {
 
     DigiFactEstimationRequest digiFactEstimationRequest = {
@@ -76,6 +93,15 @@ function routeToDigiFact(ClaimSubmission claim) returns error? {
 
 }
 
+# Requests repair services for fire damage based on the claim submission.
+#
+# This function processes a claim submission specifically for fire damage repairs. 
+# It prepares and sends the necessary information to the repair service provider.
+#
+# + claim - The claim submission details including claim reference, customer reference,
+#           customer profile, policy ID, and loss details.
+#
+# + returns - An error? if there is an issue during the repair request process. Otherwise, returns nothing.
 function requestFireDamageRepair(ClaimSubmission claim) returns error? {
     // Send to fire department
     // Fire department API integration logic
@@ -174,7 +200,16 @@ type FireDamageRepairResponse record {
     string serviceProvider;
 };
 
-//Data mapper
+# Converts a claim submission into a fire damage repair request.
+#
+# This function takes a claim submission as input and converts it into a format 
+# suitable for a fire damage repair request. The resulting object will contain 
+# all necessary details required by the repair service provider.
+#
+# + claimSubmission - The claim submission details including claim reference, customer reference,
+#                     customer profile, policy ID, and loss details.
+#
+# + returns - A `FireDamageRepairRequest` object containing the formatted details for the fire damage repair request.
 function toFireDamageRepairRequest(ClaimSubmission claimSubmission) returns FireDamageRepairRequest => {
     claimReference: claimSubmission.claimReference,
     customerReference: claimSubmission.customerReference,
@@ -184,6 +219,17 @@ function toFireDamageRepairRequest(ClaimSubmission claimSubmission) returns Fire
 };
 
 
+# Converts a claim submission into a DigiFact estimation request.
+#
+# This function takes a claim submission as input and converts it into a format 
+# suitable for a DigiFact estimation request. The resulting object will contain 
+# all necessary details required by DigiFact for processing the estimation.
+#
+# + claimSubmission - The claim submission details including claim reference, customer reference,
+#                     customer profile, policy ID, and loss details.
+#
+# + returns - A `DigiFactEstimationRequest` object containing the formatted details for the DigiFact estimation request.
+#             Returns an error if the conversion process encounters any issues.
 function toDigiFactEstimationRequest(ClaimSubmission claimSubmission) returns DigiFactEstimationRequest|error => {
     policyID: check int:fromString(claimSubmission.policyID),
     claimReference: claimSubmission.claimReference,
