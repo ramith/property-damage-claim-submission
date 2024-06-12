@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,63 +34,51 @@ type LossDetails struct {
 
 func main() {
 	r := gin.Default()
-	r.Use(LogRequestBody());
-
-	r.POST("/upload", func(c *gin.Context) {
-		// Parse the form, including file upload
-		file, handler, err := c.Request.FormFile("file")
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "File upload error"})
-			return
-		}
-
-		// Save the file
-		out, err := os.Create(handler.Filename)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to save file"})
-			return
-		}
-		defer out.Close()
-
-		_, err = io.Copy(out, file)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to read file"})
-			return
-		}
-
-		// Retrieve JSON data from form field
-		estimateID := c.PostForm("estimateId")
-		data := c.PostForm("data")
-
-		// Print the uploaded file name and form data for debugging
-		log.Printf("File uploaded: %s\n", handler.Filename)
-		log.Printf("Form Data: estimateId=%s, data=%s\n", estimateID, data)
-
-		c.JSON(http.StatusOK, gin.H{
-			"status":                 "Estimate Generated",
-			"estimatedRepairCost":    "$4500",
-			"vendorAssigned":         "DigiFact",
-			"expectedCompletionDate": "2024-06-20T00:00:00Z",
-		})
-	})
-
-	r.POST("/estimate", func(c *gin.Context) {
-		var claim Claim
-
-		// Bind the JSON payload to the Claim struct.
-		if err := c.ShouldBindJSON(&claim); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{
-			"status":                  "Estimate Generated",
-			"estimatedRepairCost":     "$4500",
-			"vendorAssigned":          "DigiFact",
-			"expectedCompletionDate": "2024-06-20T00:00:00Z",
-		})
-	})
-
+	//r.Use(LogRequestBody());
+	r.POST("/estimate", estimateHandler)
 	r.Run(":8082")
+}
+
+// estimateHandler handles the /estimate endpoint.
+func estimateHandler(c *gin.Context) {
+	// Parse the form, including file upload
+	file, handler, err := c.Request.FormFile("attachments")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File upload error"})
+		return
+	}
+	defer file.Close()
+
+	fileSize, err := file.Seek(0, io.SeekEnd)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to determine file size"})
+		return
+	}
+
+	// Reset file pointer
+	_, err = file.Seek(0, io.SeekStart)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to reset file pointer"})
+		return
+	}
+
+	// Extract and parse the JSON payload from the form field
+	claimJson := c.PostForm("claim")
+	var claim Claim
+	if err := json.Unmarshal([]byte(claimJson), &claim); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Print everything in a single log line
+	log.Printf("File uploaded: %s, File size: %d bytes, Claim Data: %+v", handler.Filename, fileSize, claim)
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":                 "Estimate Generated",
+		"estimatedRepairCost":    "$4500",
+		"vendorAssigned":         "DigiFact",
+		"expectedCompletionDate": "2024-06-20T00:00:00Z",
+	})
 }
 
 // Middleware to log request body

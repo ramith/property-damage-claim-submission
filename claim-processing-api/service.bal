@@ -1,5 +1,6 @@
 import ballerina/http;
 import ballerina/log;
+import ballerina/mime;
 
 configurable string contractLookupApiEndpoint = ?;
 configurable string estimationApiEndpoint = ?;
@@ -13,17 +14,44 @@ http:Client fireDamageRepairAPI = check new (url = firedamageRepairApiEndpoint);
 # bound to port `9090`.
 service / on new http:Listener(9090) {
 
+    resource function post submitWithAttachments(http:Request req) returns string|error {
+        mime:Entity[] bodyParts = check req.getBodyParts();
+
+        string fileName = "";
+        int fileSize = 0;
+        ClaimSubmission claimData = {claimType: "", claimReference: "", policyID: "", customerContact: {email: "", phone: ""}, lossDetails: {dateOfLoss: "", typeOfLoss: "", estimatedLoss: "", attachments: ""}, customerProfile: {id: "", name: "", address: ""}, propertyDetails: {reference: "", address: "", 'type: "", location: {latitude: 0, longitude: 0}}, customerReference: "", dateSubmitted: ""};
+        byte[] fileContent;
+
+        foreach mime:Entity item in bodyParts {
+            string contentType = item.getContentType();
+            if contentType == mime:APPLICATION_JSON {
+                json claimDataJson = check item.getJson();
+                claimData = check claimDataJson.cloneWithType(ClaimSubmission);
+            } else if item.getContentDisposition().fileName != "" {
+                // Handle the file part
+                mime:ContentDisposition contentDisposition = item.getContentDisposition();
+                fileName = contentDisposition.fileName;
+                fileContent = check item.getByteArray();
+                fileSize = fileContent.length();
+            }
+        }
+
+        log:printInfo("recieved claim submission with attachments", claim = claimData, fileName = fileName, fileSize = fileSize);
+
+        return "claim submitted successfully";
+    }
+
     # Receives a claim submission and routes it to the appropriate system.
     #
     # This function handles the submission of a claim, validates the incoming data,
     # and routes it to the designated system based on the provided information.
     #
     # + claim - The claim submission details including claim reference, customer reference,
-    #           customer profile, policy ID, and loss details.
+    # customer profile, policy ID, and loss details.
     # + request - The HTTP request received, containing the claim submission payload.
-    # 
+    #
     # + returns - An error message if validation fails or routing encounters an issue.
-    #             A success message if the claim is successfully routed.
+    # A success message if the claim is successfully routed.
     resource function post submit(ClaimSubmission claim, http:Request request) returns error|string {
         // Add your logic here
 
@@ -60,7 +88,7 @@ service / on new http:Listener(9090) {
 # Routes the claim submission to the DigiFact system.
 #
 # + claim - The claim submission details including claim reference, customer reference,
-#           customer profile, policy ID, and loss details.
+# customer profile, policy ID, and loss details.
 #
 # + returns - An error if there is an issue during the routing process. Otherwise, returns nothing.
 function routeToDigiFact(ClaimSubmission claim) returns error? {
@@ -99,7 +127,7 @@ function routeToDigiFact(ClaimSubmission claim) returns error? {
 # It prepares and sends the necessary information to the repair service provider.
 #
 # + claim - The claim submission details including claim reference, customer reference,
-#           customer profile, policy ID, and loss details.
+# customer profile, policy ID, and loss details.
 #
 # + returns - An error? if there is an issue during the repair request process. Otherwise, returns nothing.
 function requestFireDamageRepair(ClaimSubmission claim) returns error? {
@@ -207,7 +235,7 @@ type FireDamageRepairResponse record {
 # all necessary details required by the repair service provider.
 #
 # + claimSubmission - The claim submission details including claim reference, customer reference,
-#                     customer profile, policy ID, and loss details.
+# customer profile, policy ID, and loss details.
 #
 # + returns - A `FireDamageRepairRequest` object containing the formatted details for the fire damage repair request.
 function toFireDamageRepairRequest(ClaimSubmission claimSubmission) returns FireDamageRepairRequest => {
@@ -218,7 +246,6 @@ function toFireDamageRepairRequest(ClaimSubmission claimSubmission) returns Fire
     dateOfServiceRequested: claimSubmission.lossDetails.dateOfLoss
 };
 
-
 # Converts a claim submission into a DigiFact estimation request.
 #
 # This function takes a claim submission as input and converts it into a format 
@@ -226,10 +253,10 @@ function toFireDamageRepairRequest(ClaimSubmission claimSubmission) returns Fire
 # all necessary details required by DigiFact for processing the estimation.
 #
 # + claimSubmission - The claim submission details including claim reference, customer reference,
-#                     customer profile, policy ID, and loss details.
+# customer profile, policy ID, and loss details.
 #
 # + returns - A `DigiFactEstimationRequest` object containing the formatted details for the DigiFact estimation request.
-#             Returns an error if the conversion process encounters any issues.
+# Returns an error if the conversion process encounters any issues.
 function toDigiFactEstimationRequest(ClaimSubmission claimSubmission) returns DigiFactEstimationRequest|error => {
     policyID: check int:fromString(claimSubmission.policyID),
     claimReference: claimSubmission.claimReference,
