@@ -2,11 +2,11 @@ import ballerina/http;
 import ballerina/log;
 
 configurable string contractLookupApiEndpoint = ?;
-configurable string digiFactApiEndpoint = ?;
+configurable string estimationApiEndpoint = ?;
 configurable string firedamageRepairApiEndpoint = ?;
 
 http:Client contractLookUpAPI = check new (url = contractLookupApiEndpoint);
-http:Client digifactAPI = check new (url = digiFactApiEndpoint);
+http:Client digifactAPI = check new (url = estimationApiEndpoint);
 http:Client fireDamageRepairAPI = check new (url = firedamageRepairApiEndpoint);
 
 # A service representing a network-accessible API
