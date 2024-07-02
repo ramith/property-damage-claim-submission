@@ -1,4 +1,9 @@
 
+import ballerina/http;
+
+listener http:Listener httpListener =  check new http:Listener(9090);
+
+
 type CustomerProfile record {
     string id;
     string name;

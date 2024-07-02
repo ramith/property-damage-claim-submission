@@ -2,6 +2,7 @@ import ballerina/http;
 import ballerina/log;
 import ballerina/mime;
 
+
 configurable string contractLookupApiEndpoint = ?;
 configurable string estimationApiEndpoint = ?;
 configurable string firedamageRepairApiEndpoint = ?;
@@ -12,7 +13,7 @@ http:Client fireDamageRepairAPI = check new (url = firedamageRepairApiEndpoint);
 
 # A service representing a network-accessible API
 # bound to port `9090`.
-service / on new http:Listener(9090) {
+service /claim on httpListener {
 
     resource function post submit(http:Request req) returns string|error {
         mime:Entity[] bodyParts = check req.getBodyParts();
