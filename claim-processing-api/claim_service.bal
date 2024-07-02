@@ -2,13 +2,11 @@ import ballerina/http;
 import ballerina/log;
 import ballerina/mime;
 
-
 configurable string contractLookupApiEndpoint = ?;
 configurable string estimationApiEndpoint = ?;
 configurable string firedamageRepairApiEndpoint = ?;
 
 http:Client contractLookUpAPI = check new (url = contractLookupApiEndpoint);
-http:Client digifactAPI = check new (url = estimationApiEndpoint);
 http:Client fireDamageRepairAPI = check new (url = firedamageRepairApiEndpoint);
 
 # A service representing a network-accessible API
@@ -72,31 +70,6 @@ function contractLookup(ClaimSubmission claim) returns ContractLookupResponse|er
 }
 
 function routeForEstimation(string destination, ClaimSubmission claim, FileAttachment attachment) returns EstimationResponse|error {
-    match destination {
-        "DigiFact" => {
-            return routeToDigiFact(claim, attachment);
-        }
-        // more systems to route
-        _ => {
-            return error("unable to find a system to route");
-        }
-    }
-}
-
-function routeToDamageRepair(ClaimSubmission claim) returns error? {
-    match claim.lossDetails.typeOfLoss {
-        "Fire Damage" => {
-            check requestFireDamageRepair(claim);
-        }
-        // more system to integrate based on the type of loss
-        _ => {
-            return error("unable to find a matching damage repair system to route");
-        }
-        // Route to default
-    }
-}
-
-function routeToDigiFact(ClaimSubmission claim, FileAttachment attachment) returns EstimationResponse|error {
 
     EstimationRequest digiFactEstimationRequest = {
         policyID: check int:fromString(claim.policyID),
@@ -129,9 +102,24 @@ function routeToDigiFact(ClaimSubmission claim, FileAttachment attachment) retur
     // Send the multipart request
     http:Request request = new;
     request.setBodyParts(bodyParts, contentType = mime:MULTIPART_FORM_DATA);
-
-    EstimationResponse digiFactEstimationResponse = check digifactAPI->post("/estimate", request);
+    string estimationAPIEndpont = check findPartnerEndpoint(destination);
+    http:Client esitmationAPI = check new (<string>estimationAPIEndpont);
+    EstimationResponse digiFactEstimationResponse = check esitmationAPI->post("", request);
     return digiFactEstimationResponse;
+
+}
+
+function routeToDamageRepair(ClaimSubmission claim) returns error? {
+    match claim.lossDetails.typeOfLoss {
+        "Fire Damage" => {
+            check requestFireDamageRepair(claim);
+        }
+        // more system to integrate based on the type of loss
+        _ => {
+            return error("unable to find a matching damage repair system to route");
+        }
+        // Route to default
+    }
 }
 
 function requestFireDamageRepair(ClaimSubmission claim) returns error? {
