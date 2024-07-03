@@ -6,15 +6,15 @@ map<string> partnerEnvs = scanEnvForEndpoints();
 
 function scanEnvForEndpoints() returns map<string> {
     map<string> envs = os:listEnv();
-    map<string> result = envs.filter(function(string key) returns boolean {
 
-        if (key.startsWith(PARTNER_)) {
-            log:printInfo("Partner Endpoint", key = key, value = envs[key]);
-            return true;
-        }
-        return false;
-    });
-    return result;
+    log:printInfo("Scanning for partner endpoints:", envs = envs);
+
+    
+    map<string> filtered = map from [string, string] [key, value] in envs.entries()
+                        where key.startsWith(PARTNER_)
+                        select [key, value];
+
+    return filtered;
 }
 
 function findPartnerEndpoint(string partnerName) returns string|error {

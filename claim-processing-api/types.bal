@@ -55,7 +55,14 @@ type ContractLookupRequest record {
 type ContractLookupResponse record {
     string status;
     string message;
-    string routeTo;
+    ClaimProcessingStep[] route;
+};
+
+type ClaimProcessingStep record {
+    int stepNumber;
+    string stepName;
+    string associatedVendor;
+    string vendorEndpoint;
 };
 
 type EstimationRequest record {

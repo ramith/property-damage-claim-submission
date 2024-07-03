@@ -3,11 +3,8 @@ import ballerina/log;
 import ballerina/mime;
 
 configurable string contractLookupApiEndpoint = ?;
-configurable string estimationApiEndpoint = ?;
-configurable string firedamageRepairApiEndpoint = ?;
 
 http:Client contractLookUpAPI = check new (url = contractLookupApiEndpoint);
-http:Client fireDamageRepairAPI = check new (url = firedamageRepairApiEndpoint);
 
 # A service representing a network-accessible API
 # bound to port `9090`.
@@ -42,13 +39,32 @@ service /claim on httpListener {
             return error("contract lookup failed - unable to find a contract");
         }
 
-        EstimationResponse estimationResponse = check routeForEstimation(contractLookupStatus.routeTo, claimSubmission, fileAttachment);
+        // make sure that steps are processed in correct order. (don't depend on response to be in the correct order)
+        ClaimProcessingStep[] sortedSteps = from var s in contractLookupStatus.route
+            order by s.stepNumber ascending
+            select s;
 
-        if (estimationResponse.status != "Estimate Generated") {
-            return error("estimation workflow failed");
+        foreach ClaimProcessingStep step in sortedSteps {
+            log:printInfo("claim processing step", step = step);
+
+            match step.stepName {
+                "ReceiveClaim" => {
+                    // Add your logic for the "ReceiveClaim" case here
+                    EstimationResponse estimationResponse = check recieveClaim(step.associatedVendor, claimSubmission, fileAttachment);
+                    if (estimationResponse.status != "Estimate Generated") {
+                        return error("estimation workflow failed");
+                    }
+                }
+
+                "DamageRepair" => {
+                        check damageRepair(step.associatedVendor, claimSubmission);
+                }
+                _ => {
+                    return error("unknown claim processing step");
+                }
+            }
+
         }
-
-        check routeToDamageRepair(claimSubmission);
 
         return "claim submitted successfully";
     }
@@ -69,7 +85,7 @@ function contractLookup(ClaimSubmission claim) returns ContractLookupResponse|er
     return contractLookUpStatus;
 }
 
-function routeForEstimation(string destination, ClaimSubmission claim, FileAttachment attachment) returns EstimationResponse|error {
+function recieveClaim(string destination, ClaimSubmission claim, FileAttachment attachment) returns EstimationResponse|error {
 
     EstimationRequest digiFactEstimationRequest = {
         policyID: check int:fromString(claim.policyID),
@@ -103,32 +119,24 @@ function routeForEstimation(string destination, ClaimSubmission claim, FileAttac
     http:Request request = new;
     request.setBodyParts(bodyParts, contentType = mime:MULTIPART_FORM_DATA);
     string estimationAPIEndpont = check findPartnerEndpoint(destination);
-    http:Client esitmationAPI = check new (<string>estimationAPIEndpont);
+    http:Client esitmationAPI = check new (estimationAPIEndpont);
     EstimationResponse digiFactEstimationResponse = check esitmationAPI->post("", request);
     return digiFactEstimationResponse;
 
 }
 
-function routeToDamageRepair(ClaimSubmission claim) returns error? {
-    match claim.lossDetails.typeOfLoss {
-        "Fire Damage" => {
-            check requestFireDamageRepair(claim);
-        }
-        // more system to integrate based on the type of loss
-        _ => {
-            return error("unable to find a matching damage repair system to route");
-        }
-        // Route to default
-    }
-}
 
-function requestFireDamageRepair(ClaimSubmission claim) returns error? {
+
+function damageRepair(string destination, ClaimSubmission claim) returns error? {
     // Send to fire department
     // Fire department API integration logic
 
     FireDamageRepairRequest fireDamageRepairRequest = toFireDamageRepairRequest(claim);
 
-    FireDamageRepairResponse fireDamageRepairResponse = check fireDamageRepairAPI->/repair.post(fireDamageRepairRequest);
+    string damageRepairAPI = check findPartnerEndpoint(destination);
+
+    http:Client fireDamageRepairAPI = check new (damageRepairAPI);
+    FireDamageRepairResponse fireDamageRepairResponse = check fireDamageRepairAPI->/.post(fireDamageRepairRequest);
     log:printInfo("fire damage repair response", fireDamageRepairResponse = fireDamageRepairResponse);
 
     if fireDamageRepairResponse.status != "Service Scheduled" {
