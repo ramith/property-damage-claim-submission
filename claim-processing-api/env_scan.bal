@@ -1,15 +1,10 @@
-import ballerina/log;
 import ballerina/os;
 
 const string PARTNER_ = "PARTNER_";
 map<string> partnerEnvs = scanEnvForEndpoints();
 
 function scanEnvForEndpoints() returns map<string> {
-    map<string> envs = os:listEnv();
-
-    log:printInfo("Scanning for partner endpoints:", envs = envs);
-
-    
+    map<string> envs = os:listEnv();    
     map<string> filtered = map from [string, string] [key, value] in envs.entries()
                         where key.startsWith(PARTNER_)
                         select [key, value];

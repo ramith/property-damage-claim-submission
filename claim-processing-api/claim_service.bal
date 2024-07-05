@@ -57,7 +57,7 @@ service /claim on httpListener {
                 }
 
                 "DamageRepair" => {
-                        check damageRepair(step.associatedVendor, claimSubmission);
+                    check damageRepair(step.associatedVendor, claimSubmission);
                 }
                 _ => {
                     return error("unknown claim processing step");
@@ -125,8 +125,6 @@ function recieveClaim(string destination, ClaimSubmission claim, FileAttachment 
 
 }
 
-
-
 function damageRepair(string destination, ClaimSubmission claim) returns error? {
     // Send to fire department
     // Fire department API integration logic
@@ -136,11 +134,16 @@ function damageRepair(string destination, ClaimSubmission claim) returns error? 
     string damageRepairAPI = check findPartnerEndpoint(destination);
 
     http:Client fireDamageRepairAPI = check new (damageRepairAPI);
-    FireDamageRepairResponse fireDamageRepairResponse = check fireDamageRepairAPI->/.post(fireDamageRepairRequest);
-    log:printInfo("fire damage repair response", fireDamageRepairResponse = fireDamageRepairResponse);
+    FireDamageRepairResponse|error fireDamageRepairResponse = fireDamageRepairAPI->post("", fireDamageRepairRequest);
+    if fireDamageRepairResponse is error {
+        log:printError("error while calling fire damage repair service", fireDamageRepairResponse);
+    } else {
+        log:printInfo("fire damage repair response", fireDamageRepairResponse = fireDamageRepairResponse);
 
-    if fireDamageRepairResponse.status != "Service Scheduled" {
-        return error("unable to schedule fire damage repair service");
+        if fireDamageRepairResponse.status != "Service Scheduled" {
+            return error("unable to schedule fire damage repair service");
+        }
     }
+
     return ();
 }

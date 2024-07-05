@@ -1,0 +1,11 @@
+# Configuration file for "claim_processing_api"
+# How to use see:
+# https://ballerina.io/learn/provide-values-to-configurable-variables/#provide-via-toml-syntax
+
+
+contractLookupApiEndpoint = "https://08bd1175-7029-4caf-a11b-10d047fed4f7-dev.e1-us-east-azure.choreoapis.dev/verisk-demo-endpoints/contractlookup/v1.0"	# Type of STRING
+
+estimationApiEndpoint = "https://08bd1175-7029-4caf-a11b-10d047fed4f7-dev.e1-us-east-azure.choreoapis.dev/verisk-demo-endpoints/estimationapi/v1.0"	# Type of STRING
+
+firedamageRepairApiEndpoint = "https://08bd1175-7029-4caf-a11b-10d047fed4f7-dev.e1-us-east-azure.choreoapis.dev/verisk-demo-endpoints/damagerepairapi/v1.0"	# Type of STRING
+
