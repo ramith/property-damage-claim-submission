@@ -59,7 +59,7 @@ service /claim on httpListener {
             order by s.stepNumber ascending
             select s;
 
-        log:printInfo("----> sorted claim processing steps", sortedSteps = sortedSteps)
+        log:printInfo("----> sorted claim processing steps", sortedSteps = sortedSteps);
 
         foreach ClaimProcessingStep step in sortedSteps {
             log:printInfo("claim processing step", step = step);
@@ -154,7 +154,7 @@ function recieveClaim(string destination, ClaimSubmission claim, FileAttachment?
     http:Request request = new;
     request.setBodyParts(bodyParts, contentType = mime:MULTIPART_FORM_DATA);
     string estimationAPIEndpont = check findPartnerEndpoint(destination);
-    log:printInfo("sending claim to estimation API", endpoint = estimationAPIEndpont, claim = digiFactEstimationRequest))
+    log:printInfo("sending claim to estimation API", endpoint = estimationAPIEndpont, claim = digiFactEstimationRequest);
     http:Client esitmationAPI = check new (estimationAPIEndpont);
     EstimationResponse digiFactEstimationResponse = check esitmationAPI->post("", request);
     return digiFactEstimationResponse;
