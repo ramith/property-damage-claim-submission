@@ -14,7 +14,7 @@ service /claim on httpListener {
         mime:Entity[] bodyParts = check req.getBodyParts();
 
         ClaimSubmission claimSubmission = {claimType: "", claimReference: "", policyID: "", customerContact: {email: "", phone: ""}, lossDetails: {dateOfLoss: "", typeOfLoss: "", estimatedLoss: "", attachments: ""}, customerProfile: {id: "", name: "", address: ""}, propertyDetails: {reference: "", address: "", 'type: "", location: {latitude: 0, longitude: 0}}, customerReference: "", dateSubmitted: ""};
-        FileAttachment fileAttachment = {fileName: "", content: [], contentType: ""};
+        FileAttachment? fileAttachment = ();
 
         foreach mime:Entity item in bodyParts {
             string contentType = item.getContentType();
@@ -28,10 +28,12 @@ service /claim on httpListener {
                 claimSubmission = check claimDataJson.cloneWithType(ClaimSubmission);
             } else if item.getContentDisposition().fileName != "" {
                 // Handle the file part
-                fileAttachment.fileName = contentDisposition.fileName;
-                log:printInfo("found attachment", fileName = fileAttachment.fileName, contentType = contentType);
-                fileAttachment.content = check item.getByteArray();
-                fileAttachment.contentType = item.getContentType();
+
+                fileAttachment = {
+                    fileName: contentDisposition.fileName,
+                    content: check item.getByteArray(),
+                    contentType: contentType
+                };
             } else {
                 log:printWarn("unknown content type", contentType = contentType);
 
@@ -45,8 +47,12 @@ service /claim on httpListener {
             }
         }
 
-        log:printInfo("recieved claim submission with attachments",
-                        claim = claimSubmission, fileName = fileAttachment.fileName, fileSize = fileAttachment.content.length());
+        if (fileAttachment is ()) {
+            log:printWarn("no attachments found in the claim submission");
+        } else {
+            log:printInfo("recieved claim submission with attachments",
+                            claim = claimSubmission, fileName = fileAttachment.fileName, fileSize = fileAttachment.content.length());
+        }
 
         ContractLookupResponse contractLookupStatus = check contractLookup(claimSubmission);
 
@@ -65,8 +71,7 @@ service /claim on httpListener {
             match step.stepName {
                 "ReceiveClaim" => {
                     // Add your logic for the "ReceiveClaim" case here
-                    FileAttachment? recievedFile = fileAttachment.content.length() > 0 ? fileAttachment : ();
-                    EstimationResponse|error  estimationResponse  = recieveClaim(step.associatedVendor, claimSubmission, recievedFile);
+                    EstimationResponse|error estimationResponse = recieveClaim(step.associatedVendor, claimSubmission, fileAttachment);
                     if estimationResponse is error {
                         log:printError("workflow step - estimation failed", estimationResponse);
                         return estimationResponse;
@@ -78,13 +83,13 @@ service /claim on httpListener {
                 }
 
                 "DamageRepair" => {
-                    error? outcome =  damageRepair(step.associatedVendor, claimSubmission);
+                    error? outcome = damageRepair(step.associatedVendor, claimSubmission);
                     if outcome is error {
                         log:printError("workflow step - damage repair failed", outcome);
                         return outcome;
                     }
 
-                }   
+                }
                 _ => {
                     return error("unknown claim processing step");
                 }
@@ -94,10 +99,11 @@ service /claim on httpListener {
 
         return "claim submitted successfully";
     }
+
 }
 
 function contractLookup(ClaimSubmission claim) returns ContractLookupResponse|error {
-    
+
     ContractLookupRequest contractLookupRequest = {
         claimReference: claim.claimReference,
         customerReference: claim.customerReference,
