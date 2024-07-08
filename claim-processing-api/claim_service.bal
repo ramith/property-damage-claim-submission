@@ -66,15 +66,25 @@ service /claim on httpListener {
                 "ReceiveClaim" => {
                     // Add your logic for the "ReceiveClaim" case here
                     FileAttachment? recievedFile = fileAttachment.content.length() > 0 ? fileAttachment : ();
-                    EstimationResponse estimationResponse = check recieveClaim(step.associatedVendor, claimSubmission, recievedFile);
+                    EstimationResponse|error  estimationResponse  = recieveClaim(step.associatedVendor, claimSubmission, recievedFile);
+                    if estimationResponse is error {
+                        log:printError("workflow step - estimation failed", estimationResponse);
+                        return estimationResponse;
+                    }
+
                     if (estimationResponse.status != "Estimate Generated") {
-                        return error("estimation workflow failed");
+                        return error("estimation workflow failed - unexpected status");
                     }
                 }
 
                 "DamageRepair" => {
-                    check damageRepair(step.associatedVendor, claimSubmission);
-                }
+                    error? outcome =  damageRepair(step.associatedVendor, claimSubmission);
+                    if outcome is error {
+                        log:printError("workflow step - damage repair failed", outcome);
+                        return outcome;
+                    }
+
+                }   
                 _ => {
                     return error("unknown claim processing step");
                 }
