@@ -27,6 +27,16 @@ service /claim on httpListener {
                 fileAttachment.fileName = contentDisposition.fileName;
                 fileAttachment.content = check item.getByteArray();
                 fileAttachment.contentType = item.getContentType();
+            } else {
+                log:printWarn("unknown content type", contentType = contentType );
+
+                string|error content = item.getText();
+                if content is string {
+                    log:printWarn("unknown content in text form", content = content);
+                } else {
+                    log:printError("unable to parse the content as a text" , content);
+                    return error("unable to parse the content as a text");
+                }
             }
         }
 
