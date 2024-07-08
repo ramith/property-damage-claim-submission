@@ -37,7 +37,7 @@
             </log>
             <call>
                 <endpoint>
-                    <http method="post" uri-template="https://api.vendorb.com/validate-claim"/>
+                    <http method="post" uri-template="https://184431bc-5d14-4e99-9c19-3ff3ded8c2a7.mock.pstmn.io/validate-claim"/>
                 </endpoint>
             </call>
             <respond/>
