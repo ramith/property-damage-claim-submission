@@ -18,13 +18,18 @@ service /claim on httpListener {
 
         foreach mime:Entity item in bodyParts {
             string contentType = item.getContentType();
+            mime:ContentDisposition contentDisposition = item.getContentDisposition();
+            log:printInfo("processing content type", contentType = contentType, contentDisposition = contentDisposition.disposition, 
+                                                                fileName = contentDisposition.fileName, name = contentDisposition.name);
+
             if contentType == mime:APPLICATION_JSON {
+                log:printInfo("found claim submission json");
                 json claimDataJson = check item.getJson();
                 claimSubmission = check claimDataJson.cloneWithType(ClaimSubmission);
             } else if item.getContentDisposition().fileName != "" {
                 // Handle the file part
-                mime:ContentDisposition contentDisposition = item.getContentDisposition();
                 fileAttachment.fileName = contentDisposition.fileName;
+                log:printInfo("found attachment", fileName = fileAttachment.fileName, contentType = contentType);
                 fileAttachment.content = check item.getByteArray();
                 fileAttachment.contentType = item.getContentType();
             } else {
