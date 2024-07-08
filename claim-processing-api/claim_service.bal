@@ -19,7 +19,7 @@ service /claim on httpListener {
         foreach mime:Entity item in bodyParts {
             string contentType = item.getContentType();
             mime:ContentDisposition contentDisposition = item.getContentDisposition();
-            log:printInfo("processing content type", contentType = contentType, contentDisposition = contentDisposition.disposition, 
+            log:printInfo("processing content type", contentType = contentType, contentDisposition = contentDisposition.disposition,
                                                                 fileName = contentDisposition.fileName, name = contentDisposition.name);
 
             if contentType == mime:APPLICATION_JSON {
@@ -33,13 +33,13 @@ service /claim on httpListener {
                 fileAttachment.content = check item.getByteArray();
                 fileAttachment.contentType = item.getContentType();
             } else {
-                log:printWarn("unknown content type", contentType = contentType );
+                log:printWarn("unknown content type", contentType = contentType);
 
                 string|error content = item.getText();
                 if content is string {
                     log:printWarn("unknown content in text form", content = content);
                 } else {
-                    log:printError("unable to parse the content as a text" , content);
+                    log:printError("unable to parse the content as a text", content);
                     return error("unable to parse the content as a text");
                 }
             }
@@ -65,7 +65,8 @@ service /claim on httpListener {
             match step.stepName {
                 "ReceiveClaim" => {
                     // Add your logic for the "ReceiveClaim" case here
-                    EstimationResponse estimationResponse = check recieveClaim(step.associatedVendor, claimSubmission, fileAttachment);
+                    FileAttachment? recievedFile = fileAttachment.content.length() > 0 ? fileAttachment : ();
+                    EstimationResponse estimationResponse = check recieveClaim(step.associatedVendor, claimSubmission, recievedFile);
                     if (estimationResponse.status != "Estimate Generated") {
                         return error("estimation workflow failed");
                     }
@@ -100,7 +101,9 @@ function contractLookup(ClaimSubmission claim) returns ContractLookupResponse|er
     return contractLookUpStatus;
 }
 
-function recieveClaim(string destination, ClaimSubmission claim, FileAttachment attachment) returns EstimationResponse|error {
+function recieveClaim(string destination, ClaimSubmission claim, FileAttachment? attachment) returns EstimationResponse|error {
+
+    mime:Entity[] bodyParts = [];
 
     EstimationRequest digiFactEstimationRequest = {
         policyID: check int:fromString(claim.policyID),
@@ -118,17 +121,22 @@ function recieveClaim(string destination, ClaimSubmission claim, FileAttachment 
     jsonContentDisposition.disposition = "form-data";
     jsonPart.setContentDisposition(jsonContentDisposition);
 
-    mime:Entity filePart = new;
-    filePart.setByteArray(attachment.content, attachment.contentType);
-    check filePart.setContentType(attachment.contentType);
+    bodyParts.push(jsonPart);
 
-    mime:ContentDisposition fileContentDisposition = new;
-    fileContentDisposition.name = "attachments";
-    fileContentDisposition.disposition = "form-data";
-    fileContentDisposition.fileName = attachment.fileName;
-    filePart.setContentDisposition(fileContentDisposition);
+    if !(attachment is ()) {
+        mime:Entity filePart = new;
+        filePart.setByteArray(attachment.content, attachment.contentType);
+        check filePart.setContentType(attachment.contentType);
 
-    mime:Entity[] bodyParts = [jsonPart, filePart];
+        mime:ContentDisposition fileContentDisposition = new;
+        fileContentDisposition.name = "attachments";
+        fileContentDisposition.disposition = "form-data";
+        fileContentDisposition.fileName = attachment.fileName;
+        filePart.setContentDisposition(fileContentDisposition);
+        bodyParts.push(filePart);
+    } else {
+        log:printWarn("no attachments found, not sending attachments to the estimation API");
+    }
 
     // Send the multipart request
     http:Request request = new;
