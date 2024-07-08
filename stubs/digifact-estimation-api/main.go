@@ -41,27 +41,6 @@ func main() {
 
 // estimateHandler handles the /estimate endpoint.
 func estimateHandler(c *gin.Context) {
-	// Parse the form, including file upload
-	file, handler, err := c.Request.FormFile("attachments")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "File upload error"})
-		return
-	}
-	defer file.Close()
-
-	fileSize, err := file.Seek(0, io.SeekEnd)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to determine file size"})
-		return
-	}
-
-	// Reset file pointer
-	_, err = file.Seek(0, io.SeekStart)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to reset file pointer"})
-		return
-	}
-
 	// Extract and parse the JSON payload from the form field
 	claimJson := c.PostForm("claim")
 	var claim Claim
@@ -70,8 +49,30 @@ func estimateHandler(c *gin.Context) {
 		return
 	}
 
-	// Print everything in a single log line
-	log.Printf("File uploaded: %s, File size: %d bytes, Claim Data: %+v", handler.Filename, fileSize, claim)
+	// Check if a file was uploaded
+	file, handler, err := c.Request.FormFile("attachments")
+	if err == nil {
+		defer file.Close()
+
+		fileSize, err := file.Seek(0, io.SeekEnd)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to determine file size"})
+			return
+		}
+
+		// Reset file pointer
+		_, err = file.Seek(0, io.SeekStart)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to reset file pointer"})
+			return
+		}
+
+		// Log the file details
+		log.Printf("File uploaded: %s, File size: %d bytes", handler.Filename, fileSize)
+	}
+
+	// Log the claim data
+	log.Printf("Claim Data: %+v", claim)
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":                 "Estimate Generated",
