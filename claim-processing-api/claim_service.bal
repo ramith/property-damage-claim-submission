@@ -154,6 +154,7 @@ function recieveClaim(string destination, ClaimSubmission claim, FileAttachment?
     http:Request request = new;
     request.setBodyParts(bodyParts, contentType = mime:MULTIPART_FORM_DATA);
     string estimationAPIEndpont = check findPartnerEndpoint(destination);
+    log:printInfo("sending claim to estimation API", endpoint = estimationAPIEndpont, claim = digiFactEstimationRequest))
     http:Client esitmationAPI = check new (estimationAPIEndpont);
     EstimationResponse digiFactEstimationResponse = check esitmationAPI->post("", request);
     return digiFactEstimationResponse;
