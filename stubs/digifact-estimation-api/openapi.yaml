@@ -25,7 +25,6 @@ paths:
                   type: string
                   description: JSON payload with claim details
               required:
-                - attachments
                 - claim
       responses:
         '200':
