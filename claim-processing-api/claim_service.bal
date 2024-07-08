@@ -59,6 +59,8 @@ service /claim on httpListener {
             order by s.stepNumber ascending
             select s;
 
+        log:printInfo("----> sorted claim processing steps", sortedSteps = sortedSteps)
+
         foreach ClaimProcessingStep step in sortedSteps {
             log:printInfo("claim processing step", step = step);
 
