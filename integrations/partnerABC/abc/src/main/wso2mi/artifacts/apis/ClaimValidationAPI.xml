@@ -1,0 +1,46 @@
+<api xmlns="http://ws.apache.org/ns/synapse" name="ClaimValidationAPI" context="/claim-validation">
+    <resource methods="POST" uri-template="/validate">
+        <inSequence>
+            <property name="dateOfServiceRequested" expression="get-property('SYSTEM_DATE', 'yyyy-MM-dd HH:mm:ss')" scope="default" type="STRING"/>
+            <payloadFactory media-type="json">
+                <format>{
+  "claimReference": "$1",
+  "customerReference": "$2",
+  "propertyDetails": {
+    "reference": "$3",
+    "address": "$4",
+    "type": "$5",
+    "location": {
+      "latitude": $6,
+      "longitude": $7
+    }
+  },
+  "typeOfServiceRequested": "$8",
+  "dateOfServiceRequested": "$9"
+}</format>
+                <args>
+                    <arg evaluator="json" expression="$.claimReference"/>
+                    <arg evaluator="json" expression="$.customerReference"/>
+                    <arg evaluator="json" expression="$.propertyDetails.reference"/>
+                    <arg evaluator="json" expression="$.propertyDetails.address"/>
+                    <arg evaluator="json" expression="$.propertyDetails.type"/>
+                    <arg evaluator="json" expression="$.propertyDetails.location.latitude"/>
+                    <arg evaluator="json" expression="$.propertyDetails.location.longitude"/>
+                    <arg evaluator="json" expression="$.typeOfServiceRequested"/>
+                    <arg expression="get-property('dateOfServiceRequested')"/>
+                </args>
+            </payloadFactory>
+            <property name="messageType" value="application/json" scope="axis2"/>
+            <!-- Log the payload before sending -->
+            <log level="custom">
+                <property name="Payload_before_sending" expression="json-eval($)"/>
+            </log>
+            <call>
+                <endpoint>
+                    <http method="post" uri-template="https://184431bc-5d14-4e99-9c19-3ff3ded8c2a7.mock.pstmn.io/validate-claim"/>
+                </endpoint>
+            </call>
+            <respond/>
+        </inSequence>
+    </resource>
+</api>
