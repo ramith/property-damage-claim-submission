@@ -14,11 +14,19 @@ type RequestPayload struct {
 	PolicyID          int    `json:"policyID"`
 }
 
+// ClaimProcessingStep represents each step in the routing information.
+type ClaimProcessingStep struct {
+	StepNumber       int    `json:"stepNumber"`
+	StepName         string `json:"stepName"`
+	AssociatedVendor string `json:"associatedVendor"`
+	VendorEndpoint   string `json:"vendorEndpoint"`
+}
+
 // ResponsePayload represents the structure of the outgoing JSON response.
 type ResponsePayload struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
-	RouteTo string `json:"routeTo"`
+	Status  string                `json:"status"`
+	Message string                `json:"message"`
+	Route   []ClaimProcessingStep `json:"route"`
 }
 
 func main() {
@@ -34,14 +42,49 @@ func main() {
 
 		// Log the received payload
 		log.Printf("Received payload: %+v", requestPayload)
+		var responsePayload ResponsePayload
 
-		// Create the response struct.
-		responsePayload := ResponsePayload{
-			Status:  "Success",
-			Message: "Routing information retrieved.",
-			RouteTo: "DigiFact",
+		if requestPayload.PolicyID == 112233 {
+			// Create the response struct with example data.
+			responsePayload = ResponsePayload{
+				Status:  "Success",
+				Message: "Routing information retrieved.",
+				Route: []ClaimProcessingStep{
+					{
+						StepNumber:       1,
+						StepName:         "ReceiveClaim",
+						AssociatedVendor: "DigiFact",
+						VendorEndpoint:   "https://api.vendora.com/receive-claim",
+					},
+					{
+						StepNumber:       2,
+						StepName:         "DamageRepair",
+						AssociatedVendor: "FirstOnSite",
+						VendorEndpoint:   "https://api.vendorb.com/validate-claim",
+					},
+				},
+			}
+		} else {
+			// Create the response struct with example data.
+			responsePayload = ResponsePayload{
+				Status:  "Success",
+				Message: "Routing information retrieved.",
+				Route: []ClaimProcessingStep{
+					{
+						StepNumber:       1,
+						StepName:         "ReceiveClaim",
+						AssociatedVendor: "DigiFact",
+						VendorEndpoint:   "https://api.vendora.com/receive-claim",
+					},
+					{
+						StepNumber:       2,
+						StepName:         "DamageRepair",
+						AssociatedVendor: "XYZ",
+						VendorEndpoint:   "https://api.xyz.com/validate",
+					},
+				},
+			}
 		}
-
 		// Send the response as JSON.
 		c.JSON(http.StatusOK, responsePayload)
 

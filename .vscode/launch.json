@@ -1,12 +1,16 @@
 {
     "configurations": [
+        
         {
             "name": "Ballerina Debug",
             "type": "ballerina",
             "request": "launch",
             "programArgs": [],
             "commandOptions": [],
-            "env": {}
+            "env": {
+                "PARTNER_DIGIFACT": "http://localhost:8082/estimate",
+                "PARTNER_XYZ": "http://localhost:8083/repair"
+            }
         },
         {
             "name": "Ballerina Test",
@@ -15,7 +19,10 @@
             "debugTests": true,
             "programArgs": [],
             "commandOptions": [],
-            "env": {}
+            "env": {
+                "PARTNER_DIGIFACT": "http://localhost:8082/estimate",
+                "PARTNER_XYZ": "http://localhost:8083/repair"
+            }
         },
         {
             "name": "Ballerina Remote",

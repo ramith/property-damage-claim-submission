@@ -6,53 +6,29 @@ info:
 servers:
   - url: http://localhost:8082
     description: Local server
-
 paths:
   /estimate:
     post:
-      summary: Generate an estimate based on the provided claim data
+      summary: Estimate Generation
       requestBody:
-        description: JSON payload containing claim details.
         required: true
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
-                claimReference:
+                attachments:
                   type: string
-                  example: "CLAIM12345"
-                customerReference:
+                  format: binary
+                  description: The file to be uploaded
+                claim:
                   type: string
-                  example: "CUST98765"
-                customerProfile:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      example: "CUSTPROF001"
-                policyID:
-                  type: integer
-                  example: 1234
-                lossDetails:
-                  type: object
-                  properties:
-                    dateOfLoss:
-                      type: string
-                      format: date
-                      example: "2024-06-01"
-                    typeOfLoss:
-                      type: string
-                      example: "Fire"
-                    estimatedLoss:
-                      type: string
-                      example: "$15000"
-                    attachments:
-                      type: string
-                      example: "attachment-url"
+                  description: JSON payload with claim details
+              required:
+                - claim
       responses:
-        "200":
-          description: Successful response with estimate details.
+        '200':
+          description: Successfully generated estimate
           content:
             application/json:
               schema:
@@ -60,19 +36,18 @@ paths:
                 properties:
                   status:
                     type: string
-                    example: "Estimate Generated"
+                    example: Estimate Generated
                   estimatedRepairCost:
                     type: string
-                    example: "$4500"
+                    example: $4500
                   vendorAssigned:
                     type: string
-                    example: "DigiFact"
+                    example: DigiFact
                   expectedCompletionDate:
                     type: string
-                    format: date-time
-                    example: "2024-06-20T00:00:00Z"
-        "400":
-          description: Bad request due to invalid payload.
+                    example: 2024-06-20T00:00:00Z
+        '400':
+          description: Bad Request
           content:
             application/json:
               schema:
@@ -80,8 +55,17 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: "Invalid payload."
-
+                    example: File upload error
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unable to determine file size
 components:
   schemas:
     Claim:
@@ -92,11 +76,11 @@ components:
         customerReference:
           type: string
         customerProfile:
-          $ref: "#/components/schemas/CustomerProfile"
+          $ref: '#/components/schemas/CustomerProfile'
         policyID:
           type: integer
         lossDetails:
-          $ref: "#/components/schemas/LossDetails"
+          $ref: '#/components/schemas/LossDetails'
     CustomerProfile:
       type: object
       properties:
@@ -107,7 +91,6 @@ components:
       properties:
         dateOfLoss:
           type: string
-          format: date
         typeOfLoss:
           type: string
         estimatedLoss:

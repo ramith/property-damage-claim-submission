@@ -1,8 +1,10 @@
 package main
 
 import (
-    "github.com/gin-gonic/gin"
-    "net/http"
+	"log"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Location struct {
@@ -40,6 +42,8 @@ func main() {
             c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
             return
         }
+
+        log.Printf("Received payload: %+v", request)
 
         response := RepairResponse{
             Status:          "Service Scheduled",

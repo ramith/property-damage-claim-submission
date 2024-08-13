@@ -1,0 +1,200 @@
+openapi: 3.0.0
+info:
+  title: Claim Estimate API
+  version: 1.0.0
+  description: API for handling claims and generating estimates.
+servers:
+  - url: http://localhost:9090
+    description: Local server
+paths:
+  /claim/submit:
+    post:
+      summary: Submit a claim with attachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                attachments:
+                  type: string
+                  format: binary
+                  description: The file to be uploaded
+                claim:
+                  $ref: '#/components/schemas/ClaimSubmission'
+              required:
+                - attachments
+                - claim
+      responses:
+        '200':
+          description: Claim submitted successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: claim submitted successfully
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: contract lookup failed - unable to find a contract
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unable to determine file size
+components:
+  schemas:
+    ClaimSubmission:
+      type: object
+      properties:
+        claimReference:
+          type: string
+        dateSubmitted:
+          type: string
+        customerReference:
+          type: string
+        policyID:
+          type: string
+        customerProfile:
+          $ref: '#/components/schemas/CustomerProfile'
+        customerContact:
+          $ref: '#/components/schemas/CustomerContact'
+        claimType:
+          type: string
+        propertyDetails:
+          $ref: '#/components/schemas/PropertyDetails'
+        lossDetails:
+          $ref: '#/components/schemas/LossDetails'
+    CustomerProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+    CustomerContact:
+      type: object
+      properties:
+        email:
+          type: string
+        phone:
+          type: string
+    Location:
+      type: object
+      properties:
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+    PropertyDetails:
+      type: object
+      properties:
+        reference:
+          type: string
+        address:
+          type: string
+        type:
+          type: string
+        location:
+          $ref: '#/components/schemas/Location'
+    LossDetails:
+      type: object
+      properties:
+        dateOfLoss:
+          type: string
+        typeOfLoss:
+          type: string
+        estimatedLoss:
+          type: string
+        attachments:
+          type: string
+    ContractLookupRequest:
+      type: object
+      properties:
+        claimReference:
+          type: string
+        customerReference:
+          type: string
+        policyID:
+          type: integer
+    ContractLookupResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        routeTo:
+          type: string
+    EstimationRequest:
+      type: object
+      properties:
+        policyID:
+          type: integer
+        claimReference:
+          type: string
+        customerReference:
+          type: string
+        customerProfile:
+          $ref: '#/components/schemas/CustomerProfile'
+        lossDetails:
+          $ref: '#/components/schemas/LossDetails'
+    EstimationResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        estimatedRepairCost:
+          type: string
+        vendorAssigned:
+          type: string
+        expectedCompletionDate:
+          type: string
+    FireDamageRepairRequest:
+      type: object
+      properties:
+        claimReference:
+          type: string
+        customerReference:
+          type: string
+        propertyDetails:
+          $ref: '#/components/schemas/PropertyDetails'
+        typeOfServiceRequested:
+          type: string
+        dateOfServiceRequested:
+          type: string
+    FireDamageRepairResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        serviceDate:
+          type: string
+        serviceProvider:
+          type: string
+    FileAttachment:
+      type: object
+      properties:
+        fileName:
+          type: string
+        content:
+          type: string
+          format: binary
+        contentType:
+          type: string
