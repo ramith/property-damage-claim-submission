@@ -2,9 +2,9 @@ import ballerina/http;
 import ballerina/log;
 import ballerina/mime;
 
-configurable string contractLookupApiEndpoint = ?;
+configurable string contractApiEndpoint = ?;
 
-http:Client contractLookUpAPI = check new (url = contractLookupApiEndpoint);
+http:Client contractAPI = check new (url = contractApiEndpoint);
 
 # A service representing a network-accessible API
 # bound to port `9090`.
@@ -110,7 +110,7 @@ function contractLookup(ClaimSubmission claim) returns ContractLookupResponse|er
         policyID: check int:fromString(claim.policyID)
     };
 
-    ContractLookupResponse contractLookUpStatus = check contractLookUpAPI->/lookup.post(contractLookupRequest);
+    ContractLookupResponse contractLookUpStatus = check contractAPI->/lookup.post(contractLookupRequest);
     log:printInfo("contract lookup status", contractLookUpStatus = contractLookUpStatus);
 
     return contractLookUpStatus;
