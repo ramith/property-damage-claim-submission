@@ -1,0 +1,11 @@
+<api xmlns="http://ws.apache.org/ns/synapse" name="SimpleClaimSubmissionAPI" context="/submitClaim">
+    <resource methods="POST" uri-template="/simple">
+        <inSequence>
+            <property name="messageType" value="application/json" scope="axis2"/>
+            <call>
+                <endpoint key="RoutingServiceEndpoint"/>
+            </call>
+            <respond/>
+        </inSequence>
+    </resource>
+</api>
