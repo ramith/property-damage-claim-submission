@@ -54,6 +54,44 @@ paths:
                   error:
                     type: string
                     example: Unable to determine file size
+  /claim/submit/simple:
+    post:
+      summary: Submit a simple claim without attachment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimSubmission'
+      responses:
+        '200':
+          description: Simple claim submitted successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: simple claim submitted successfully
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: invalid claim data
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: internal server error
+
 components:
   schemas:
     ClaimSubmission:
