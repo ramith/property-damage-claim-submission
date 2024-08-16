@@ -63,6 +63,31 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ClaimSubmission'
+            example:
+              claimReference: "CLM1234567"
+              dateSubmitted: "2024-06-06T12:00:00Z"
+              customerReference: "CUST78910"
+              policyID: "112233"
+              customerProfile:
+                id: "123"
+                name: "John Doe"
+                address: "1234 Elm St, Springfield, USA"
+              customerContact:
+                email: "johndoe@example.com"
+                phone: "555-1234"
+              claimType: "Property Damage"
+              propertyDetails:
+                reference: "PROP101112"
+                address: "1234 Elm St, Springfield, USA"
+                type: "Residential"
+                location:
+                  latitude: 34.052235
+                  longitude: -118.243683
+              lossDetails:
+                dateOfLoss: "2024-06-01T10:00:00Z"
+                typeOfLoss: "Fire Damage"
+                estimatedLoss: "$5000"
+                attachments: "fire_damage_photo.jpg"
       responses:
         '200':
           description: Simple claim submitted successfully
