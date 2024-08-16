@@ -100,6 +100,55 @@ service /claim on httpListener {
         return "claim submitted successfully";
     }
 
+    resource function post submit/simple(ClaimSubmission claimSubmission) returns string|error {
+       
+       ContractLookupResponse contractLookupStatus = check contractLookup(claimSubmission);
+
+        if contractLookupStatus.status != "Success" {
+            return error("contract lookup failed - unable to find a contract");
+        }
+
+        // make sure that steps are processed in correct order. (don't depend on response to be in the correct order)
+        ClaimProcessingStep[] sortedSteps = from var s in contractLookupStatus.route
+            order by s.stepNumber ascending
+            select s;
+
+        foreach ClaimProcessingStep step in sortedSteps {
+            log:printInfo("claim processing step", step = step);
+
+            match step.stepName {
+                "ReceiveClaim" => {
+                    // Add your logic for the "ReceiveClaim" case here
+                    EstimationResponse|error estimationResponse = recieveClaim(step.associatedVendor, claimSubmission, ());
+                    if estimationResponse is error {
+                        log:printError("workflow step - estimation failed", estimationResponse);
+                        return estimationResponse;
+                    }
+
+                    if (estimationResponse.status != "Estimate Generated") {
+                        return error("estimation workflow failed - unexpected status");
+                    }
+                }
+
+                "DamageRepair" => {
+                    error? outcome = damageRepair(step.associatedVendor, claimSubmission);
+                    if outcome is error {
+                        log:printError("workflow step - damage repair failed", outcome);
+                        return outcome;
+                    }
+
+                }
+                _ => {
+                    return error("unknown claim processing step");
+                }
+            }
+
+        }
+
+        return "claim submitted successfully";
+    } 
+
+    
 }
 
 function contractLookup(ClaimSubmission claim) returns ContractLookupResponse|error {
