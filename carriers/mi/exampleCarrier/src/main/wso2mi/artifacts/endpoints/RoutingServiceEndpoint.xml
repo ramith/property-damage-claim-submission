@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <endpoint name="RoutingServiceEndpoint" xmlns="http://ws.apache.org/ns/synapse">
-    <http method="post" uri-template="{uri.var.endpointUrl}">
+    <http method="post" uri-template="{uri.var.endpointUrl}/claim/submit/simple">
     </http>
 </endpoint>
