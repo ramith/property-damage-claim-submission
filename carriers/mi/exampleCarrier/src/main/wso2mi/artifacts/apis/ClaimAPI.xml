@@ -2,16 +2,69 @@
 <api context="/claims" name="ClaimAPI" xmlns="http://ws.apache.org/ns/synapse">
     <resource methods="POST" uri-template="/convert">
         <inSequence>
-            <property name="ContentType" value="application/xml" scope="axis2"/>
-            <property name="messageType" value="application/xml" scope="axis2"/>
-            <!-- Set the message type to JSON -->
-            <property name="messageType" value="application/json" scope="axis2"/>
-            <!-- Call the externalized endpoint -->
-            <call>
+			<property name="ContentType" scope="axis2" type="STRING" description="Make sure content is in XML format" value="application/xml"/>
+			<property name="messageType" scope="axis2" type="STRING" description="Convert the claim from XML to Json" value="application/xml"/>
+			<!-- Transform XML to JSON -->
+			<payloadFactory description="Transform received Json payload before sending it to routine service" media-type="json" template-type="default">
+				<format>{
+					"claimReference": "$1",
+					"claimType": "$2",
+					"customerContact": {
+					"email": "$3",
+					"phone": "$4"
+					},
+					"customerProfile": {
+					"address": "$5",
+					"id": "$6",
+					"name": "$7"
+					},
+					"customerReference": "$8",
+					"dateSubmitted": "$9",
+					"lossDetails": {
+					"attachments": "$10",
+					"dateOfLoss": "$11",
+					"estimatedLoss": "$12",
+					"typeOfLoss": "$13"
+					},
+					"policyID": "$14",
+					"propertyDetails": {
+					"address": "$15",
+					"location": {
+					"latitude": $16,
+					"longitude": $17
+					},
+					"reference": "$18",
+					"type": "$19"
+					}
+					}</format>
+				<args>
+					<arg expression="//claimReference" evaluator="xml"/>
+					<arg expression="//claimType" evaluator="xml"/>
+					<arg expression="//customerContact/email" evaluator="xml"/>
+					<arg expression="//customerContact/phone" evaluator="xml"/>
+					<arg expression="//customerProfile/address" evaluator="xml"/>
+					<arg expression="//customerProfile/id" evaluator="xml"/>
+					<arg expression="//customerProfile/name" evaluator="xml"/>
+					<arg expression="//customerReference" evaluator="xml"/>
+					<arg expression="//dateSubmitted" evaluator="xml"/>
+					<arg expression="//lossDetails/attachments" evaluator="xml"/>
+					<arg expression="//lossDetails/dateOfLoss" evaluator="xml"/>
+					<arg expression="//lossDetails/estimatedLoss" evaluator="xml"/>
+					<arg expression="//lossDetails/typeOfLoss" evaluator="xml"/>
+					<arg expression="//policyID" evaluator="xml"/>
+					<arg expression="//propertyDetails/address" evaluator="xml"/>
+					<arg expression="//propertyDetails/location/latitude" evaluator="xml"/>
+					<arg expression="//propertyDetails/location/longitude" evaluator="xml"/>
+					<arg expression="//propertyDetails/reference" evaluator="xml"/>
+					<arg expression="//propertyDetails/type" evaluator="xml"/>
+				</args>
+			</payloadFactory>
+			<!-- Call the externalized endpoint -->
+			<call description="Send the Claim to Routing Service">
 				<endpoint key="RoutingServiceEndpoint"/>
 			</call>
 			<!-- Respond back to the client -->
-            <respond/>
-        </inSequence>
+			<respond description="Respond back to Carrier"/>
+		</inSequence>
     </resource>
 </api>
