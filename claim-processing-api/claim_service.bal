@@ -100,7 +100,7 @@ service /claim on httpListener {
         return "claim submitted successfully";
     }
 
-    resource function post submit/simple(ClaimSubmission claimSubmission) returns string|error {
+    resource function post submit/simple(ClaimSubmission claimSubmission) returns ClaimProcessingStepStatus[]|error {
        
        ContractLookupResponse contractLookupStatus = check contractLookup(claimSubmission);
 
@@ -112,6 +112,8 @@ service /claim on httpListener {
         ClaimProcessingStep[] sortedSteps = from var s in contractLookupStatus.route
             order by s.stepNumber ascending
             select s;
+
+        ClaimProcessingStepStatus[] stepStatuses = [];
 
         foreach ClaimProcessingStep step in sortedSteps {
             log:printInfo("claim processing step", step = step);
@@ -127,7 +129,11 @@ service /claim on httpListener {
 
                     if (estimationResponse.status != "Estimate Generated") {
                         return error("estimation workflow failed - unexpected status");
+                    } else {
+                        stepStatuses.push({stepNumber: step.stepNumber, stepName: step.stepName, associatedVendor: step.associatedVendor, status: estimationResponse.status});
                     }
+
+
                 }
 
                 "DamageRepair" => {
@@ -135,6 +141,8 @@ service /claim on httpListener {
                     if outcome is error {
                         log:printError("workflow step - damage repair failed", outcome);
                         return outcome;
+                    } else {
+                        stepStatuses.push({stepNumber: step.stepNumber, stepName: step.stepName, associatedVendor: step.associatedVendor, status: "Service Scheduled"});
                     }
 
                 }
@@ -145,7 +153,9 @@ service /claim on httpListener {
 
         }
 
-        return "claim submitted successfully";
+        
+
+        return stepStatuses;
     } 
 
     

@@ -65,6 +65,13 @@ type ClaimProcessingStep record {
     string vendorEndpoint;
 };
 
+type ClaimProcessingStepStatus record {
+        int stepNumber;
+        string stepName;
+        string associatedVendor;
+        string status; 
+};
+
 type EstimationRequest record {
     int policyID;
     string claimReference;
