@@ -1,0 +1,136 @@
+openapi: 3.0.0
+info:
+  title: Claims Conversion API
+  version: 1.0.0
+  description: API to receive and process claim submissions in XML format.
+servers:
+  - url: http://localhost:9090
+    description: Local server
+paths:
+  /claims/convert:
+    post:
+      summary: Convert and process claim submission from XML
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/ClaimSubmission'
+            example: |
+              <ClaimSubmission>
+                <claimReference>CLM1234567</claimReference>
+                <claimType>Property Damage</claimType>
+                <customerContact>
+                  <email>johndoe@example.com</email>
+                  <phone>555-1234</phone>
+                </customerContact>
+                <customerProfile>
+                  <address>1234 Elm St, Springfield, USA</address>
+                  <id>123</id>
+                  <name>John Doe</name>
+                </customerProfile>
+                <customerReference>CUST78910</customerReference>
+                <dateSubmitted>2024-06-06T12:00:00Z</dateSubmitted>
+                <lossDetails>
+                  <attachments>fire_damage_photo.jpg</attachments>
+                  <dateOfLoss>2024-06-01T10:00:00Z</dateOfLoss>
+                  <estimatedLoss>$5000</estimatedLoss>
+                  <typeOfLoss>Fire Damage</typeOfLoss>
+                </lossDetails>
+                <policyID>112233</policyID>
+                <propertyDetails>
+                  <address>1234 Elm St, Springfield, USA</address>
+                  <location>
+                    <latitude>34.052235</latitude>
+                    <longitude>-118.243683</longitude>
+                  </location>
+                  <reference>PROP101112</reference>
+                  <type>Residential</type>
+                </propertyDetails>
+              </ClaimSubmission>
+      responses:
+        '200':
+          description: Claim processed successfully
+          content:
+            application/xml:
+              schema:
+                type: string
+              example: <response>Claim processed successfully</response>
+        '400':
+          description: Bad Request
+          content:
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: <error>Invalid XML payload</error>
+        '500':
+          description: Internal Server Error
+          content:
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: <error>Internal server error</error>
+components:
+  schemas:
+    ClaimSubmission:
+      type: object
+      properties:
+        claimReference:
+          type: string
+        claimType:
+          type: string
+        customerContact:
+          type: object
+          properties:
+            email:
+              type: string
+            phone:
+              type: string
+        customerProfile:
+          type: object
+          properties:
+            address:
+              type: string
+            id:
+              type: string
+            name:
+              type: string
+        customerReference:
+          type: string
+        dateSubmitted:
+          type: string
+        lossDetails:
+          type: object
+          properties:
+            attachments:
+              type: string
+            dateOfLoss:
+              type: string
+            estimatedLoss:
+              type: string
+            typeOfLoss:
+              type: string
+        policyID:
+          type: string
+        propertyDetails:
+          type: object
+          properties:
+            address:
+              type: string
+            location:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+            reference:
+              type: string
+            type:
+              type: string
