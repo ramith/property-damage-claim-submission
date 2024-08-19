@@ -3,11 +3,11 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.microintegrator.projects</groupId>
-  <artifactId>exCarrier</artifactId>
+  <artifactId>exampleCarrier</artifactId>
   <version>1.0.0</version>
   <packaging>pom</packaging>
-  <name>exCarrier</name>
-  <description>exCarrier</description>
+  <name>exampleCarrier</name>
+  <description>exampleCarrier</description>
   <repositories>
     <repository>
         <id>wso2-nexus</id>
@@ -342,7 +342,7 @@
   </profiles>    
   <properties>
     <projectType>integration-project</projectType>
-    <uuid>91203427-500f-4b3b-ba9a-04b902177e20</uuid>
+    <uuid>243eeadf-3a95-4ffb-b2b2-d56ee28fa05a</uuid>
     <!-- <archiveLocation>configure a custom target directory for CAPP</archiveLocation> -->
     <keystore.type>JKS</keystore.type>
     <keystore.name>wso2carbon.jks</keystore.name>

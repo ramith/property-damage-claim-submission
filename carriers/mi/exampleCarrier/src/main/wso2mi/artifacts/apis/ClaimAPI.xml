@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<api context="/claims" name="ClaimAPI" xmlns="http://ws.apache.org/ns/synapse">
+    <resource methods="POST" uri-template="/convert">
+        <inSequence>
+            <property name="ContentType" value="application/xml" scope="axis2"/>
+            <property name="messageType" value="application/xml" scope="axis2"/>
+            <!-- Set the message type to JSON -->
+            <property name="messageType" value="application/json" scope="axis2"/>
+            <!-- Call the externalized endpoint -->
+            <call>
+				<endpoint key="RoutingServiceEndpoint"/>
+			</call>
+			<!-- Respond back to the client -->
+            <respond/>
+        </inSequence>
+    </resource>
+</api>
