@@ -59,6 +59,8 @@
 					<arg expression="//propertyDetails/type" evaluator="xml"/>
 				</args>
 			</payloadFactory>
+			 <property name="uri.var.endpointUrl" expression="get-property('env', 'ROUTING_SERVICE_URL')" scope="default" type="STRING"/>
+			 
 			<!-- Call the externalized endpoint -->
 			<call description="Send the Claim to Routing Service">
 				<endpoint key="RoutingServiceEndpoint"/>
